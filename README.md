@@ -9,3 +9,6 @@ A discord bot designed for discord communities where nobody speaks a single lang
   - webhook integrations to disguise bot as the user sending the message
   - webhook caching
 - secure db
+
+- - -
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I2I61Z3QJH)
