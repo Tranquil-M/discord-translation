@@ -1,7 +1,7 @@
 [project]
 name = "discord-translation"
 version = "0.1.0"
-description = "Add your description here"
+description = "A discord bot designed for discord communities where nobody speaks a single language. This program bridges that barrier with a simple to use translation interface."
 readme = "README.md"
 authors = [
     { name = "Matthew Hannon", email = "matthannon.dev@gmail.com" }
