@@ -108,7 +108,7 @@ class LiveTranslation(commands.Cog):
         try:
             identifier = (source, language)
             if identifier in self.translator_cache:
-                translator = self.translator_cache[identifier]
+                translator = self.translator_cache.get(identifier)
             else:
                 translator = MyMemoryTranslator(source=source, target=language)
                 self.translator_cache[identifier] = translator
