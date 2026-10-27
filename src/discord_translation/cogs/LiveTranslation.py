@@ -1,3 +1,5 @@
+from asyncio import create_task
+
 import discord
 from discord.ext import commands
 
@@ -5,7 +7,7 @@ from discord.ext import commands
 class LiveTranslation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.webhooks = {}
+        self.webhook_cache = {}
 
     async def send_as_user(
         self,
@@ -16,11 +18,11 @@ class LiveTranslation(commands.Cog):
         if payload.author.bot:
             return
 
-        if payload.author.name not in self.webhooks:
+        if payload.author.name not in self.webhook_cache:
             webhook = await channel.create_webhook(name=payload.author.name)
-            self.webhooks[payload.author.name] = webhook
+            self.webhook_cache[payload.author.name] = webhook
         else:
-            webhook = self.webhooks.get(payload.author.name)
+            webhook = self.webhook_cache.get(payload.author.name)
 
         print(webhook)
         await webhook.send(
@@ -29,6 +31,17 @@ class LiveTranslation(commands.Cog):
             avatar_url=payload.author.display_avatar.url,
             allowed_mentions=discord.AllowedMentions.none(),
         )
+
+    async def cleanup_webhook_cache(self):
+        for webhook in list(self.webhook_cache.values()):
+            try:
+                await webhook.delete(reason="Translator cog unloaded")
+            except discord.NotFound:
+                pass
+            except discord.HTTPException as e:
+                print(f"Could not delete webhook: {e}")
+
+        self.webhook_cache.clear()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -39,6 +52,10 @@ class LiveTranslation(commands.Cog):
         await self.send_as_user(
             message, message.content, self.bot.get_channel(1450655023846396025)
         )
+
+    @commands.Cog.listener()
+    async def cog_unload(self):
+        create_task(self.cleanup_webhook_cache())
 
 
 async def setup(bot):
