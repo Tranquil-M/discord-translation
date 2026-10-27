@@ -1,7 +1,7 @@
 import re
 
 import discord
-from deep_translator import MyMemoryTranslator
+from deep_translator import LibreTranslator
 from discord import app_commands
 from discord.ext import commands
 from langdetect import detect
@@ -92,7 +92,8 @@ class LiveTranslation(commands.Cog):
         self.webhook_cache.clear()
 
     def chunk(self, text, size=500):
-        pattern = r"[^.!?]*[.!?]"
+        pattern = r"[^.!?]+(?:[.!?]|$)"
+
         sentences = re.findall(pattern, text)
         chunks = []
         chunk = ""
@@ -110,7 +111,13 @@ class LiveTranslation(commands.Cog):
             if identifier in self.translator_cache:
                 translator = self.translator_cache.get(identifier)
             else:
-                translator = MyMemoryTranslator(source=source, target=language)
+                translator = LibreTranslator(
+                    source=source,
+                    target=language,
+                    use_free_api=True,
+                    api_key="<empty>",
+                    custom_url="http://localhost:5000/",
+                )
                 self.translator_cache[identifier] = translator
 
             if len(text) > chunk_size:
