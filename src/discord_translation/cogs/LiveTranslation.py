@@ -88,7 +88,14 @@ class LiveTranslation(commands.Cog):
 
         self.webhook_cache.clear()
 
-    def translate(self, text, language, source="auto") -> str | list[str]:
+    def translate(self, text, language, source="auto") -> str:
+        # TODO
+        # - create a function to break up text into chunks of 500 relative to the nearest sentence to maintain translation quality
+        #   - reserve whitespace
+        #   - have fun writing that algorithm future me lol
+        # - rejoin translated chunks with whitespace at the end
+        #   - wait how the hell am i gonna reserve whitespace through translations...?
+
         try:
             return MyMemoryTranslator(source=source, target=language).translate(text)
         except Exception as e:
@@ -116,6 +123,18 @@ class LiveTranslation(commands.Cog):
 
         create_channel(interaction.guild.id, channel, language)
         await interaction.followup.send("Channel created.")
+
+    @app_commands.command(
+        name="translate",
+        description="Manually translate text into any supported language. Returns as ephemeral.",
+    )
+    @app_commands.choices(target=SUPPORTED_LANGUAGES)
+    async def manual_translation(
+        self, interaction: discord.Interaction, text: str, target: str
+    ):
+        await interaction.response.defer(ephemeral=True)
+        detected = LANGUAGES[detect(text)]
+        await interaction.followup.send(self.translate(text, target, source=detected))
 
     @commands.Cog.listener()
     async def on_ready(self):
