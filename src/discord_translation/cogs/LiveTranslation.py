@@ -88,7 +88,15 @@ class LiveTranslation(commands.Cog):
             return
 
         channels = await get_channels(message.guild)
+        if not any(message.channel.id in channel for channel in channels):
+            print(message.channel.id, channels)
+            print("not in mirror")
+            return
+
         for channel_id, language in channels:
+            if message.channel.id == channel_id:
+                print("not doing this in this channel lol", channel_id)
+                continue
             print(f"Channels: {channels}, ID: {channel_id}, Language: {language}")
             await self.send_as_user(
                 message, message.content, await message.guild.fetch_channel(channel_id)
