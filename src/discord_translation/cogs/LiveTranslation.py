@@ -90,7 +90,7 @@ class LiveTranslation(commands.Cog):
 
         self.webhook_cache.clear()
 
-    def chunk(self, text, size=400):
+    def chunk(self, text, size=450):
         pattern = r"[^.!?]*[.!?]"
         sentences = re.findall(pattern, text)
         chunks = []
@@ -103,10 +103,10 @@ class LiveTranslation(commands.Cog):
         chunks.append(chunk)
         return chunks
 
-    def translate(self, text, language, source="auto", chunk_size=500) -> str:
+    def translate(self, text, language, source="auto", chunk_size=450) -> str:
         try:
-            if len(text) > 400:
-                chunks = self.chunk(text)
+            if len(text) > chunk_size:
+                chunks = self.chunk(text, size=chunk_size)
                 translated = MyMemoryTranslator(
                     source="english", target=language
                 ).translate_batch(chunks)
