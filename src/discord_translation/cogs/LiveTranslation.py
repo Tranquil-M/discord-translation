@@ -1,3 +1,5 @@
+import re
+
 import discord
 from deep_translator import MyMemoryTranslator
 from discord import app_commands
@@ -87,6 +89,19 @@ class LiveTranslation(commands.Cog):
                 print(f"Could not delete webhook: {e}")
 
         self.webhook_cache.clear()
+
+    def chunk(self, text, size=500):
+        pattern = r"[^.!?]*[.!?]"
+        sentences = re.findall(pattern, text)
+        chunks = []
+        chunk = ""
+        for sentence in sentences:
+            if len(chunk) > size:
+                chunks.append(chunk)
+                chunk = ""
+            chunk += sentence
+        chunks.append(chunk)
+        return chunks
 
     def translate(self, text, language, source="auto") -> str:
         # TODO
