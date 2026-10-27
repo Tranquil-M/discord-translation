@@ -135,7 +135,7 @@ class LiveTranslation(commands.Cog):
             if message.channel.id == channel_id:
                 continue
 
-            translated_text = self.translate(message.content, source_language, language)
+            translated_text = self.translate(message.content, language, source_language)
             await self.send_as_user(
                 message, translated_text, await message.guild.fetch_channel(channel_id)
             )
