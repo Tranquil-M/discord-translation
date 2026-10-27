@@ -23,4 +23,7 @@ else:
     )
     raise SystemExit(1)
 
-run(main())
+try:
+    run(main())
+except KeyboardInterrupt:
+    pass

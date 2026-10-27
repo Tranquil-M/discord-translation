@@ -1,4 +1,4 @@
-from os import getenv, listdir
+from os import environ, listdir
 from pathlib import Path
 
 import discord
@@ -61,5 +61,10 @@ async def reload(ctx):
 
 async def main():
     async with bot:
-        await load_cogs()
-        await bot.start(getenv("TOKEN"))
+        try:
+            await load_cogs()
+            await bot.start(environ.get("TOKEN"))
+        finally:
+            # Removing each cog calls its cog_unload hook.
+            for cog in list(bot.cogs.values()):
+                await bot.remove_cog(cog.qualified_name)
