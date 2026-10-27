@@ -105,11 +105,7 @@ class LiveTranslation(commands.Cog):
 
     def translate(self, text, language, source="auto") -> str:
         # TODO
-        # - create a function to break up text into chunks of 500 relative to the nearest sentence to maintain translation quality
-        #   - reserve whitespace
-        #   - have fun writing that algorithm future me lol
         # - rejoin translated chunks with whitespace at the end
-        #   - wait how the hell am i gonna reserve whitespace through translations...?
 
         try:
             return MyMemoryTranslator(source=source, target=language).translate(text)
