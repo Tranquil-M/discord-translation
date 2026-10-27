@@ -1,5 +1,3 @@
-from asyncio import create_task
-
 import discord
 from deep_translator import MyMemoryTranslator
 from discord import app_commands
@@ -26,13 +24,16 @@ class LiveTranslation(commands.Cog):
         translated_text: str,
         channel: discord.TextChannel,
     ):
-        author_name = payload.author.name
 
-        if author_name not in self.webhook_cache:
-            webhook = await channel.create_webhook(name=author_name)
-            self.webhook_cache[author_name] = webhook
+        author_name = payload.author.name
+        channel_id = channel.id
+        key = f"{author_name}-{channel_id}"
+
+        if key not in self.webhook_cache:
+            webhook = await channel.create_webhook(name=key)
+            self.webhook_cache[key] = webhook
         else:
-            webhook = self.webhook_cache.get(author_name)
+            webhook = self.webhook_cache.get(key)
 
         await webhook.send(
             content=translated_text,
@@ -67,6 +68,7 @@ class LiveTranslation(commands.Cog):
         *,
         existing_channel: discord.TextChannel | None,
     ):
+        await interaction.response.defer(ephemeral=True)
         if existing_channel:
             channel = existing_channel.id
         else:
@@ -74,6 +76,7 @@ class LiveTranslation(commands.Cog):
             channel = channel.id
 
         create_channel(interaction.guild.id, channel, language)
+        await interaction.followup.send("Channel created.")
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -81,11 +84,18 @@ class LiveTranslation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.author.bot:
+            return
+
         channels = await get_channels(message.guild)
-        print(channels)
+        for channel_id, language in channels:
+            print(f"Channels: {channels}, ID: {channel_id}, Language: {language}")
+            await self.send_as_user(
+                message, message.content, await message.guild.fetch_channel(channel_id)
+            )
 
     async def cog_unload(self):
-        create_task(self.cleanup_webhook_cache())
+        await self.cleanup_webhook_cache()
 
 
 async def setup(bot):
