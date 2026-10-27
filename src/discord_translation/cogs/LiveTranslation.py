@@ -96,7 +96,7 @@ class LiveTranslation(commands.Cog):
         chunks = []
         chunk = ""
         for sentence in sentences:
-            if len(chunk) > size:
+            if len(chunk) + len(sentence) > size:
                 chunks.append(chunk)
                 chunk = ""
             chunk += sentence
