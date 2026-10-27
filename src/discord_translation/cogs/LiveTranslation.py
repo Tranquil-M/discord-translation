@@ -108,7 +108,7 @@ class LiveTranslation(commands.Cog):
             if len(text) > chunk_size:
                 chunks = self.chunk(text, size=chunk_size)
                 translated = MyMemoryTranslator(
-                    source="english", target=language
+                    source=source, target=language
                 ).translate_batch(chunks)
                 return "".join(translated)
             return MyMemoryTranslator(source="english", target=language).translate(text)
