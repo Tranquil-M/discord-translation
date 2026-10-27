@@ -1,7 +1,18 @@
 from asyncio import create_task
 
 import discord
+from deep_translator import MyMemoryTranslator
+from discord import app_commands
 from discord.ext import commands
+
+from discord_translation.database import get_channels
+
+SUPPORTED_LANGUAGES = [
+    app_commands.Choice(name="Spanish", value="spanish"),
+    app_commands.Choice(name="German", value="german"),
+    app_commands.Choice(name="Czech", value="ezech"),
+    app_commands.Choice(name="English", value="english"),
+]
 
 
 class LiveTranslation(commands.Cog):
@@ -14,17 +25,15 @@ class LiveTranslation(commands.Cog):
         payload: discord.Message,
         translated_text: str,
         channel: discord.TextChannel,
-    ) -> None:
-        if payload.author.bot:
-            return
+    ):
+        author_name = payload.author.name
 
-        if payload.author.name not in self.webhook_cache:
-            webhook = await channel.create_webhook(name=payload.author.name)
-            self.webhook_cache[payload.author.name] = webhook
+        if author_name not in self.webhook_cache:
+            webhook = await channel.create_webhook(name=author_name)
+            self.webhook_cache[author_name] = webhook
         else:
-            webhook = self.webhook_cache.get(payload.author.name)
+            webhook = self.webhook_cache.get(author_name)
 
-        print(webhook)
         await webhook.send(
             content=translated_text,
             username=payload.author.display_name,
@@ -43,17 +52,32 @@ class LiveTranslation(commands.Cog):
 
         self.webhook_cache.clear()
 
+    def translate(self, text, language) -> str | list[str]:
+        return MyMemoryTranslator(source="auto", target=language).translate(text)
+
+    @app_commands.command(
+        name="create_mirror",
+        description="Create a channel that mirrors languages from another.",
+    )
+    @app_commands.choices(language=SUPPORTED_LANGUAGES)
+    async def create_channel(
+        self,
+        interaction: discord.Interaction,
+        language: str,
+        *,
+        existing_id: discord.TextChannel | None,
+    ):
+        print(language, existing_id)
+
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Cog '{__name__}' loaded.")
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        await self.send_as_user(
-            message, message.content, self.bot.get_channel(1450655023846396025)
-        )
+        channels = get_channels(message.guild.id)
+        print(channels)
 
-    @commands.Cog.listener()
     async def cog_unload(self):
         create_task(self.cleanup_webhook_cache())
 

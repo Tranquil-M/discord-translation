@@ -15,9 +15,48 @@ async def load_cogs():
             await bot.load_extension(f"discord_translation.cogs.{file[:-3]}")
 
 
+async def unload_cogs():
+    for file in listdir(COGS_DIR):
+        if file.endswith(".py") and file != "__init__.py":
+            await bot.unload_extension(f"discord_translation.cogs.{file[:-3]}")
+
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
+
+
+@bot.command(name="sync")
+@commands.is_owner()
+async def sync(ctx):
+    if ctx.guild is None:
+        await ctx.send("This command must be used in a guild, sorry!")
+        return
+
+    try:
+        synced = await bot.tree.sync()
+        print(f"Synced {len(synced)} commands.")
+    except Exception as e:
+        print("Sync failed:", e)
+    finally:
+        await ctx.message.delete()
+
+
+@bot.command(name="reload")
+@commands.is_owner()
+async def reload(ctx):
+    if ctx.guild is None:
+        await ctx.send("This command must be used in a guild, sorry!")
+        return
+
+    try:
+        await unload_cogs()
+        await load_cogs()
+
+    except Exception as e:
+        print("Failed to reload cogs:", e)
+    finally:
+        await ctx.message.delete()
 
 
 async def main():
