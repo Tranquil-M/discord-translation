@@ -106,7 +106,7 @@ class LiveTranslation(commands.Cog):
 
     def translate(self, text, language, source="auto", chunk_size=500) -> str:
         try:
-            identifier = (source, language)
+            identifier = f"{source}-{language}"
             if identifier in self.translator_cache:
                 translator = self.translator_cache.get(identifier)
             else:
