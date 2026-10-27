@@ -5,12 +5,12 @@ from deep_translator import MyMemoryTranslator
 from discord import app_commands
 from discord.ext import commands
 
-from discord_translation.database import get_channels
+from discord_translation.database import create_channel, get_channels
 
 SUPPORTED_LANGUAGES = [
     app_commands.Choice(name="Spanish", value="spanish"),
     app_commands.Choice(name="German", value="german"),
-    app_commands.Choice(name="Czech", value="ezech"),
+    app_commands.Choice(name="Czech", value="czech"),
     app_commands.Choice(name="English", value="english"),
 ]
 
@@ -60,14 +60,20 @@ class LiveTranslation(commands.Cog):
         description="Create a channel that mirrors languages from another.",
     )
     @app_commands.choices(language=SUPPORTED_LANGUAGES)
-    async def create_channel(
+    async def create_mirror(
         self,
         interaction: discord.Interaction,
         language: str,
         *,
-        existing_id: discord.TextChannel | None,
+        existing_channel: discord.TextChannel | None,
     ):
-        print(language, existing_id)
+        if existing_channel:
+            channel = existing_channel.id
+        else:
+            channel = await interaction.guild.create_text_channel(language)
+            channel = channel.id
+
+        create_channel(interaction.guild.id, channel, language)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -75,7 +81,7 @@ class LiveTranslation(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        channels = get_channels(message.guild.id)
+        channels = await get_channels(message.guild)
         print(channels)
 
     async def cog_unload(self):
