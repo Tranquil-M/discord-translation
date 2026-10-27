@@ -62,13 +62,13 @@ class LiveTranslation(commands.Cog):
 
         author_name = payload.author.name
         channel_id = channel.id
-        key = f"{author_name}-{channel_id}"
+        identifier = f"{author_name}-{channel_id}"
 
-        if key not in self.webhook_cache:
-            webhook = await channel.create_webhook(name=key)
-            self.webhook_cache[key] = webhook
+        if identifier not in self.webhook_cache:
+            webhook = await channel.create_webhook(name=identifier)
+            self.webhook_cache[identifier] = webhook
         else:
-            webhook = self.webhook_cache.get(key)
+            webhook = self.webhook_cache.get(identifier)
 
         await webhook.send(
             content=translated_text,
