@@ -54,6 +54,7 @@ class LiveTranslation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.webhook_cache = {}
+        self.translator_cache = {}
 
     async def send_as_user(
         self,
@@ -105,13 +106,19 @@ class LiveTranslation(commands.Cog):
 
     def translate(self, text, language, source="auto", chunk_size=500) -> str:
         try:
+            identifier = (source, language)
+            if identifier in self.translator_cache:
+                translator = self.translator_cache[identifier]
+            else:
+                translator = MyMemoryTranslator(source=source, target=language)
+                self.translator_cache[identifier] = translator
+
             if len(text) > chunk_size:
                 chunks = self.chunk(text, size=chunk_size)
-                translated = MyMemoryTranslator(
-                    source=source, target=language
-                ).translate_batch(chunks)
+                translated = translator.translate_batch(chunks)
                 return "".join(translated)
-            return MyMemoryTranslator(source="english", target=language).translate(text)
+
+            return translator.translate(text)
         except Exception as e:
             print(e)
             return ""
