@@ -13,7 +13,7 @@ SUPPORTED_LANGUAGES = [
     app_commands.Choice(name="English", value="english"),
 ]
 
-languages = {
+LANGUAGES = {
     "af": "afrikaans",
     "ar": "arabic",
     "bg": "bulgarian",
@@ -115,14 +115,14 @@ class LiveTranslation(commands.Cog):
     def translate(self, text, language) -> str | list[str]:
         try:
             return MyMemoryTranslator(
-                source=languages[detect(text)], target=language
+                source=LANGUAGES[detect(text)], target=language
             ).translate(text)
         except Exception as e:
             print(e)
 
     @app_commands.command(
         name="create_mirror",
-        description="Create a channel that mirrors languages from another.",
+        description="Create a channel that mirrors LANGUAGES from another.",
     )
     @app_commands.choices(language=SUPPORTED_LANGUAGES)
     async def create_mirror(
@@ -159,7 +159,6 @@ class LiveTranslation(commands.Cog):
             if message.channel.id == channel_id:
                 continue
 
-            print(f"Channels: {channels}, ID: {channel_id}, Language: {language}")
             translated_text = self.translate(message.content, language)
             await self.send_as_user(
                 message, translated_text, await message.guild.fetch_channel(channel_id)
