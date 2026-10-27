@@ -4,50 +4,28 @@ import discord
 from deep_translator import LibreTranslator
 from discord import app_commands
 from discord.ext import commands
-from langdetect import detect
 
 from discord_translation.database import create_channel, get_channels
 
 SUPPORTED_LANGUAGES = [
-    app_commands.Choice(name="Spanish", value="spanish"),
-    app_commands.Choice(name="German", value="german"),
-    app_commands.Choice(name="Czech", value="czech"),
-    app_commands.Choice(name="English", value="english"),
-    app_commands.Choice(name="French", value="french"),
-    app_commands.Choice(name="Portuguese", value="portuguese"),
-    app_commands.Choice(name="Russian", value="russian"),
-    app_commands.Choice(name="Japanese", value="japanese"),
-    app_commands.Choice(name="Korean", value="korean"),
-    app_commands.Choice(name="Arabic", value="arabic"),
-    app_commands.Choice(name="Chinese Simplified", value="chinese simplified"),
-    app_commands.Choice(name="Chinese Traditional", value="chinese traditional"),
-    app_commands.Choice(name="Hindi", value="hindi"),
-    app_commands.Choice(name="Italian", value="italian"),
-    app_commands.Choice(name="Turkish", value="turkish"),
-    app_commands.Choice(name="Polish", value="polish"),
-    app_commands.Choice(name="Dutch", value="dutch"),
+    app_commands.Choice(name="Spanish", value="Spanish"),
+    app_commands.Choice(name="German", value="German"),
+    app_commands.Choice(name="Czech", value="Czech"),
+    app_commands.Choice(name="English", value="English"),
+    app_commands.Choice(name="French", value="French"),
+    app_commands.Choice(name="Portuguese", value="Portuguese"),
+    app_commands.Choice(name="Russian", value="Russian"),
+    app_commands.Choice(name="Japanese", value="Japanese"),
+    app_commands.Choice(name="Korean", value="Korean"),
+    app_commands.Choice(name="Arabic", value="Arabic"),
+    app_commands.Choice(name="Chinese Simplified", value="Chinese Simplified"),
+    app_commands.Choice(name="Chinese Traditional", value="Chinese Traditional"),
+    app_commands.Choice(name="Hindi", value="Hindi"),
+    app_commands.Choice(name="Italian", value="Italian"),
+    app_commands.Choice(name="Turkish", value="Turkish"),
+    app_commands.Choice(name="Polish", value="Polish"),
+    app_commands.Choice(name="Dutch", value="Dutch"),
 ]
-
-
-LANGUAGES = {
-    "es": "spanish",
-    "de": "german",
-    "cs": "czech",
-    "en": "english",
-    "fr": "french",
-    "pt": "portuguese",
-    "ru": "russian",
-    "ja": "japanese",
-    "ko": "korean",
-    "ar": "arabic",
-    "zh-cn": "chinese simplified",
-    "zh-tw": "chinese traditional",
-    "hi": "hindi",
-    "it": "italian",
-    "tr": "turkish",
-    "pl": "polish",
-    "nl": "dutch",
-}
 
 
 class LiveTranslation(commands.Cog):
@@ -161,8 +139,7 @@ class LiveTranslation(commands.Cog):
         self, interaction: discord.Interaction, text: str, target: str
     ):
         await interaction.response.defer(ephemeral=True)
-        detected = LANGUAGES[detect(text)]
-        await interaction.followup.send(self.translate(text, target, source=detected))
+        await interaction.followup.send(self.translate(text, target))
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -177,12 +154,11 @@ class LiveTranslation(commands.Cog):
         if not any(message.channel.id in channel for channel in channels):
             return
 
-        source_language = LANGUAGES[detect(message.content)]
         for channel_id, language in channels:
             if message.channel.id == channel_id:
                 continue
 
-            translated_text = self.translate(message.content, language, source_language)
+            translated_text = self.translate(message.content, language)
             await self.send_as_user(
                 message, translated_text, await message.guild.fetch_channel(channel_id)
             )
