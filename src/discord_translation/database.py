@@ -73,15 +73,6 @@ def get_guild(guild_ID):
         cursor.close()
 
 
-def get_all_guilds():
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT guild_ID FROM guilds ORDER BY guild_ID")
-        return cursor.fetchall()
-    finally:
-        cursor.close()
-
-
 def get_channels(guild_ID):
     cursor = conn.cursor()
     try:
@@ -94,6 +85,16 @@ def get_channels(guild_ID):
         """,
             (guild_ID,),
         )
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+
+
+# get all, probably not needed
+def get_all_guilds():
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT guild_ID FROM guilds ORDER BY guild_ID")
         return cursor.fetchall()
     finally:
         cursor.close()
