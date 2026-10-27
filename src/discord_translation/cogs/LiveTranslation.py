@@ -2,6 +2,7 @@ import discord
 from deep_translator import MyMemoryTranslator
 from discord import app_commands
 from discord.ext import commands
+from langdetect import detect
 
 from discord_translation.database import create_channel, get_channels
 
@@ -11,6 +12,64 @@ SUPPORTED_LANGUAGES = [
     app_commands.Choice(name="Czech", value="czech"),
     app_commands.Choice(name="English", value="english"),
 ]
+
+languages = {
+    "af": "afrikaans",
+    "ar": "arabic",
+    "bg": "bulgarian",
+    "bn": "bengali",
+    "ca": "catalan",
+    "cs": "czech",
+    "cy": "welsh",
+    "da": "danish",
+    "de": "german",
+    "el": "greek",
+    "en": "english",
+    "es": "spanish",
+    "et": "estonian",
+    "fa": "persian",
+    "fi": "finnish",
+    "fr": "french",
+    "gu": "gujarati",
+    "he": "hebrew",
+    "hi": "hindi",
+    "hr": "croatian",
+    "hu": "hungarian",
+    "id": "indonesian",
+    "it": "italian",
+    "ja": "japanese",
+    "kn": "kannada",
+    "ko": "korean",
+    "lt": "lithuanian",
+    "lv": "latvian",
+    "mk": "macedonian",
+    "ml": "malayalam",
+    "mr": "marathi",
+    "ne": "nepali",
+    "nl": "dutch",
+    "no": "norwegian",
+    "pa": "punjabi",
+    "pl": "polish",
+    "pt": "portuguese",
+    "ro": "romanian",
+    "ru": "russian",
+    "sk": "slovak",
+    "sl": "slovenian",
+    "so": "somali",
+    "sq": "albanian",
+    "sv": "swedish",
+    "sw": "swahili",
+    "ta": "tamil",
+    "te": "telugu",
+    "th": "thai",
+    "tl": "filipino",
+    "tr": "turkish",
+    "uk": "ukrainian",
+    "ur": "urdu",
+    "vi": "vietnamese",
+    "zh-cn": "chinese (simplified)",
+    "zh-tw": "chinese (traditional)",
+}
 
 
 class LiveTranslation(commands.Cog):
@@ -55,7 +114,9 @@ class LiveTranslation(commands.Cog):
 
     def translate(self, text, language) -> str | list[str]:
         try:
-            return MyMemoryTranslator(source="english", target=language).translate(text)
+            return MyMemoryTranslator(
+                source=languages[detect(text)], target=language
+            ).translate(text)
         except Exception as e:
             print(e)
 
