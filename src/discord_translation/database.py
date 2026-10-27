@@ -1,6 +1,8 @@
 import sqlite3
+from pathlib import Path
 
-conn = sqlite3.connect("database.db")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+conn = sqlite3.connect(PROJECT_ROOT / "database.db")
 conn.execute("PRAGMA foreign_keys = ON")
 
 
