@@ -31,7 +31,7 @@ def setup_db():
 
 
 # setters
-def create_guild(guild_ID):
+def _create_guild(guild_ID):
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -45,7 +45,7 @@ def create_guild(guild_ID):
 
 
 def create_channel(guild_ID, channel_ID, language_NAME):
-    create_guild(guild_ID)
+    _create_guild(guild_ID)
 
     cursor = conn.cursor()
     try:
