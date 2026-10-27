@@ -21,7 +21,7 @@ class LiveTranslation(commands.Cog):
     async def send_as_user(
         self,
         payload: discord.Message,
-        translated_text: str,
+        translated_text: str | list[str],
         channel: discord.TextChannel,
     ):
 
@@ -54,7 +54,10 @@ class LiveTranslation(commands.Cog):
         self.webhook_cache.clear()
 
     def translate(self, text, language) -> str | list[str]:
-        return MyMemoryTranslator(source="auto", target=language).translate(text)
+        try:
+            return MyMemoryTranslator(source="english", target=language).translate(text)
+        except Exception as e:
+            print(e)
 
     @app_commands.command(
         name="create_mirror",
@@ -89,17 +92,16 @@ class LiveTranslation(commands.Cog):
 
         channels = await get_channels(message.guild)
         if not any(message.channel.id in channel for channel in channels):
-            print(message.channel.id, channels)
-            print("not in mirror")
             return
 
         for channel_id, language in channels:
             if message.channel.id == channel_id:
-                print("not doing this in this channel lol", channel_id)
                 continue
+
             print(f"Channels: {channels}, ID: {channel_id}, Language: {language}")
+            translated_text = self.translate(message.content, language)
             await self.send_as_user(
-                message, message.content, await message.guild.fetch_channel(channel_id)
+                message, translated_text, await message.guild.fetch_channel(channel_id)
             )
 
     async def cog_unload(self):
