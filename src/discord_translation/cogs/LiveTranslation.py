@@ -88,13 +88,12 @@ class LiveTranslation(commands.Cog):
 
         self.webhook_cache.clear()
 
-    def translate(self, text, language) -> str | list[str]:
+    def translate(self, text, language, source="auto") -> str | list[str]:
         try:
-            return MyMemoryTranslator(
-                source=LANGUAGES[detect(text)], target=language
-            ).translate(text)
+            return MyMemoryTranslator(source=source, target=language).translate(text)
         except Exception as e:
             print(e)
+            return ""
 
     @app_commands.command(
         name="create_mirror",
@@ -131,11 +130,12 @@ class LiveTranslation(commands.Cog):
         if not any(message.channel.id in channel for channel in channels):
             return
 
+        source_language = LANGUAGES[detect(message.content)]
         for channel_id, language in channels:
             if message.channel.id == channel_id:
                 continue
 
-            translated_text = self.translate(message.content, language)
+            translated_text = self.translate(message.content, source_language, language)
             await self.send_as_user(
                 message, translated_text, await message.guild.fetch_channel(channel_id)
             )
