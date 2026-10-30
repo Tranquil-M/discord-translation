@@ -4,6 +4,7 @@ import discord
 from deep_translator import LibreTranslator
 from discord import app_commands
 from discord.ext import commands
+from langdetect import detect
 
 from discord_translation.database import create_channel, get_channels
 
@@ -18,8 +19,8 @@ SUPPORTED_LANGUAGES = [
     app_commands.Choice(name="Japanese", value="Japanese"),
     app_commands.Choice(name="Korean", value="Korean"),
     app_commands.Choice(name="Arabic", value="Arabic"),
-    app_commands.Choice(name="Chinese Simplified", value="Chinese Simplified"),
-    app_commands.Choice(name="Chinese Traditional", value="Chinese Traditional"),
+    app_commands.Choice(name="Chinese Simplified", value="Chinese"),
+    app_commands.Choice(name="Chinese Traditional", value="Chinese (Traditional)"),
     app_commands.Choice(name="Hindi", value="Hindi"),
     app_commands.Choice(name="Italian", value="Italian"),
     app_commands.Choice(name="Turkish", value="Turkish"),
@@ -139,7 +140,9 @@ class LiveTranslation(commands.Cog):
         self, interaction: discord.Interaction, text: str, target: str
     ):
         await interaction.response.defer(ephemeral=True)
-        await interaction.followup.send(self.translate(text, target))
+        await interaction.followup.send(
+            self.translate(text, target, source=detect(text))
+        )
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -158,7 +161,10 @@ class LiveTranslation(commands.Cog):
             if message.channel.id == channel_id:
                 continue
 
-            translated_text = self.translate(message.content, language)
+            print(detect(message.content))
+            translated_text = self.translate(
+                message.content, language, source=detect(message.content)
+            )
             await self.send_as_user(
                 message, translated_text, await message.guild.fetch_channel(channel_id)
             )
