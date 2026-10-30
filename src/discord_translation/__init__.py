@@ -22,8 +22,3 @@ else:
         "Create a new file and define the environment variable TOKEN with your bot token."
     )
     raise SystemExit(1)
-
-try:
-    run(main())
-except KeyboardInterrupt:
-    pass

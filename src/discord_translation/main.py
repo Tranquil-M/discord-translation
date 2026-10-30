@@ -1,3 +1,4 @@
+import asyncio
 from os import environ, listdir
 from pathlib import Path
 
@@ -68,3 +69,7 @@ async def main():
             # Removing each cog calls its cog_unload hook.
             for cog in list(bot.cogs.values()):
                 await bot.remove_cog(cog.qualified_name)
+
+
+def entry():
+    asyncio.run(main())

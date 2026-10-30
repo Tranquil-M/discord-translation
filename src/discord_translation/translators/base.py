@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+import requests
+
 
 class BaseTranslator(ABC):
     def __init__(
@@ -10,7 +12,7 @@ class BaseTranslator(ABC):
         **url_params,
     ):
         self._base_url = base_url
-        self._supported_languages = _get_supported_languages()
+        self._supported_languages = self._get_supported_languages()
         self._source, self._target = self._map_language_to_code(source, target)
         super().__init__()
 
@@ -31,17 +33,25 @@ class BaseTranslator(ABC):
         self._target = lang
 
     def _map_language_to_code(self, *languages):
-        pass
+        return [
+            self._supported_languages[lang] if lang != "auto" else "auto"
+            for lang in languages
+        ]
 
     @property
     def _same_source_target(self):
         return self._source == self._target
 
-    def _get_supported_languages(self) -> list | dict:
-        pass
+    def _get_supported_languages(self) -> dict:
+        response = requests.get(f"{self._base_url}languages").json()
+        supported = {}
+        for lang in response:
+            supported[lang.get("name")] = lang.get("code")
+            supported[lang.get("code")] = lang.get("name")
+        return supported
 
     def is_language_supported(self, language: str) -> bool:
-        pass
+        return language in [lang.name for lang in self._supported_languages]
 
     @abstractmethod
     def translate(self, text: str) -> str:
