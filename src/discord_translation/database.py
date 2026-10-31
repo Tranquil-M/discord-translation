@@ -41,7 +41,6 @@ def setup_db():
                 ON DELETE CASCADE
         )
     """)
-
     conn.commit()
 
 
@@ -190,6 +189,56 @@ def get_all_channels():
             ORDER BY guild_ID, channel_ID
         """)
         return cursor.fetchall()
+    finally:
+        cursor.close()
+
+
+# webhooks
+def get_webhook_id(guild_ID: int, channel_ID: int) -> int | None:
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT webhook_ID
+            FROM channel_webhooks
+            WHERE guild_ID = ? AND channel_ID = ?
+            """,
+            (guild_ID, channel_ID),
+        )
+        row = cursor.fetchone()
+        return row[0] if row else None
+    finally:
+        cursor.close()
+
+
+def save_webhook(guild_ID: int, channel_ID: int, webhook_ID: int) -> None:
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO channel_webhooks (guild_ID, channel_ID, webhook_ID)
+            VALUES (?, ?, ?)
+            ON CONFLICT(guild_ID, channel_ID)
+            DO UPDATE SET webhook_ID = excluded.webhook_ID
+            """,
+            (guild_ID, channel_ID, webhook_ID),
+        )
+        conn.commit()
+    finally:
+        cursor.close()
+
+
+def delete_webhook(guild_ID: int, channel_ID: int) -> None:
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            DELETE FROM channel_webhooks
+            WHERE guild_ID = ? AND channel_ID = ?
+            """,
+            (guild_ID, channel_ID),
+        )
+        conn.commit()
     finally:
         cursor.close()
 
