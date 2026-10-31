@@ -30,6 +30,18 @@ def setup_db():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS channel_webhooks (
+            guild_ID INTEGER NOT NULL,
+            channel_ID INTEGER NOT NULL,
+            webhook_ID INTEGER NOT NULL,
+            PRIMARY KEY (guild_ID, channel_ID),
+            FOREIGN KEY (guild_ID, channel_ID)
+                REFERENCES guild_channels (guild_ID, channel_ID)
+                ON DELETE CASCADE
+        )
+    """)
+
     conn.commit()
 
 
@@ -62,6 +74,19 @@ def create_channel(guild_ID, channel_ID, language_NAME):
             (guild_ID, channel_ID, language_NAME),
         )
         conn.commit()
+    finally:
+        cursor.close()
+
+
+def delete_channel(channel_ID):
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "DELETE FROM guild_channels WHERE channel_ID = ?",
+            (channel_ID,),
+        )
+        conn.commit()
+        return cursor.rowcount
     finally:
         cursor.close()
 

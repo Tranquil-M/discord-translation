@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from discord_translation.database import create_channel, get_channels
+from discord_translation.database import create_channel, delete_channel, get_channels
 from discord_translation.translators.libre import LibreTranslator
 
 SUPPORTED_LANGUAGES = [
@@ -45,7 +45,7 @@ class LiveTranslation(commands.Cog):
         try:
             author_name = payload.author.name
             channel_id = channel.id
-            identifier = f"{author_name}-{channel_id}"
+            identifier = f"{channel_id}"
 
             webhook = self.webhook_cache.get(identifier)
             if webhook is None:
@@ -140,6 +140,24 @@ class LiveTranslation(commands.Cog):
 
         create_channel(interaction.guild.id, channel, language)
         await interaction.followup.send("Channel created.")
+
+    @app_commands.command(
+        name="strip_mirrors",
+        description="Delete a mirror from a channel.",
+    )
+    async def strip_mirrors(
+        self, interaction: discord.Interaction, channel: discord.TextChannel
+    ):
+        await interaction.response.defer(ephemeral=True)
+        count = delete_channel(channel.id)
+        if count == 0:
+            await interaction.followup.send(
+                "There aren't any mirrors attatched to this channel."
+            )
+            return
+        await interaction.followup.send(
+            f"Stripped {count} mirrors from {channel.mention}"
+        )
 
     @app_commands.command(
         name="translate",

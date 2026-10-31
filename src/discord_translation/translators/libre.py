@@ -39,7 +39,7 @@ class LibreTranslator(BaseTranslator):
                 response = requests.post(
                     f"{self._base_url}translate",
                     data=params,
-                    timeout=(5, 120),  # connect timeout, response timeout
+                    timeout=(10, 240),  # connect timeout, response timeout
                 )
                 response.raise_for_status()
                 result = response.json()
