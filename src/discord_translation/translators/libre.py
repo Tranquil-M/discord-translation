@@ -40,7 +40,7 @@ class LibreTranslator(BaseTranslator):
                 response = requests.post(
                     f"{self._base_url}translate",
                     data=params,
-                    timeout=(10, 240),  # connect timeout, response timeout
+                    timeout=(5, 120),  # connect timeout, response timeout
                 )
                 response.raise_for_status()
                 result = response.json()
@@ -56,14 +56,8 @@ class LibreTranslator(BaseTranslator):
         raise RuntimeError("LibreTranslate failed after 3 attempts") from last_error
 
     def translate(self, text: str) -> str:
-        print(text)
+        pattern = r"(<[^<>]*>|(?<!\w)(?:@everyone|@here|-#)(?!\w))"
         return "".join(
-            (
-                part
-                if re.fullmatch(
-                    r"( ?<[^<>]*> ?|(?<!\w)(?:@everyone|@here|-#)(?!\w))", part
-                )
-                else self._fetch_translation(part)
-            )
-            for part in re.split(r"( ?<[^<>]*> ?)", text)
+            (part if re.fullmatch(pattern, part) else self._fetch_translation(part))
+            for part in re.split(pattern, text)
         )

@@ -116,17 +116,18 @@ class LiveTranslation(commands.Cog):
         self.webhook_locks.clear()
 
     def chunk(self, text, size=500):
-        pattern = r"[^.!?]+(?:[.!?]|$)"
-
-        sentences = re.findall(pattern, text)
+        sentences = re.findall(r"[^.!?]+(?:[.!?]|$)", text)
         chunks = []
-        chunk = ""
+        current = ""
+
         for sentence in sentences:
-            if len(chunk) + len(sentence) > size:
-                chunks.append(chunk)
-                chunk = ""
-            chunk += sentence
-        chunks.append(chunk)
+            if current and len(current) + len(sentence) > size:
+                chunks.append(current)
+                current = ""
+            current += sentence
+
+        if current:
+            chunks.append(current)
         return chunks
 
     def translate(self, text, language, source="auto", chunk_size=500) -> str:
