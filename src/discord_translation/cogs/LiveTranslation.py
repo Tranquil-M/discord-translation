@@ -1,12 +1,11 @@
 import re
 
 import discord
-from deep_translator import LibreTranslator
 from discord import app_commands
 from discord.ext import commands
-from langdetect import detect
 
 from discord_translation.database import create_channel, get_channels
+from discord_translation.translators.libre import LibreTranslator
 
 SUPPORTED_LANGUAGES = [
     app_commands.Choice(name="Spanish", value="Spanish"),
@@ -20,7 +19,7 @@ SUPPORTED_LANGUAGES = [
     app_commands.Choice(name="Korean", value="Korean"),
     app_commands.Choice(name="Arabic", value="Arabic"),
     app_commands.Choice(name="Chinese Simplified", value="Chinese"),
-    app_commands.Choice(name="Chinese Traditional", value="Chinese (Traditional)"),
+    app_commands.Choice(name="Chinese Traditional", value="Chinese (traditional)"),
     app_commands.Choice(name="Hindi", value="Hindi"),
     app_commands.Choice(name="Italian", value="Italian"),
     app_commands.Choice(name="Turkish", value="Turkish"),
@@ -93,8 +92,6 @@ class LiveTranslation(commands.Cog):
                 translator = LibreTranslator(
                     source=source,
                     target=language,
-                    use_free_api=True,
-                    api_key="<empty>",
                     custom_url="http://localhost:5000/",
                 )
                 self.translator_cache[identifier] = translator
@@ -140,9 +137,7 @@ class LiveTranslation(commands.Cog):
         self, interaction: discord.Interaction, text: str, target: str
     ):
         await interaction.response.defer(ephemeral=True)
-        await interaction.followup.send(
-            self.translate(text, target, source=detect(text))
-        )
+        await interaction.followup.send(self.translate(text, target))
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -160,11 +155,7 @@ class LiveTranslation(commands.Cog):
         for channel_id, language in channels:
             if message.channel.id == channel_id:
                 continue
-
-            print(detect(message.content))
-            translated_text = self.translate(
-                message.content, language, source=detect(message.content)
-            )
+            translated_text = self.translate(message.content, language)
             await self.send_as_user(
                 message, translated_text, await message.guild.fetch_channel(channel_id)
             )
