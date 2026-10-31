@@ -56,10 +56,13 @@ class LibreTranslator(BaseTranslator):
         raise RuntimeError("LibreTranslate failed after 3 attempts") from last_error
 
     def translate(self, text: str) -> str:
+        print(text)
         return "".join(
             (
                 part
-                if re.fullmatch(r"( ?<[^<>]*> ?)", part)
+                if re.fullmatch(
+                    r"( ?<[^<>]*> ?|(?<!\w)(?:@everyone|@here|-#)(?!\w))", part
+                )
                 else self._fetch_translation(part)
             )
             for part in re.split(r"( ?<[^<>]*> ?)", text)
