@@ -150,6 +150,7 @@ class LiveTranslation(commands.Cog):
         description="Create a channel that mirrors LANGUAGES from another.",
     )
     @app_commands.choices(language=SUPPORTED_LANGUAGES)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     async def create_mirror(
         self,
         interaction: discord.Interaction,
@@ -171,6 +172,7 @@ class LiveTranslation(commands.Cog):
         name="strip_mirrors",
         description="Delete a mirror from a channel.",
     )
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     async def strip_mirrors(
         self, interaction: discord.Interaction, channel: discord.TextChannel
     ):
@@ -190,6 +192,7 @@ class LiveTranslation(commands.Cog):
         description="Manually translate text into any supported language. Returns as ephemeral.",
     )
     @app_commands.choices(target=SUPPORTED_LANGUAGES)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def manual_translation(
         self, interaction: discord.Interaction, text: str, target: str
     ):
