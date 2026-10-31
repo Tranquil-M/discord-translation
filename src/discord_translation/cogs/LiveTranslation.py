@@ -34,6 +34,7 @@ SUPPORTED_LANGUAGES = [
     app_commands.Choice(name="Turkish", value="Turkish"),
     app_commands.Choice(name="Polish", value="Polish"),
     app_commands.Choice(name="Dutch", value="Dutch"),
+    app_commands.Choice(name="Vietnamese", value="Vietnamese"),
 ]
 
 
