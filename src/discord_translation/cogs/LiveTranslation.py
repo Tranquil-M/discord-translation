@@ -115,22 +115,41 @@ class LiveTranslation(commands.Cog):
         self.webhook_cache.clear()
         self.webhook_locks.clear()
 
-    def chunk(self, text, size=500):
+    def chunk(self, text, size=400):
         sentences = re.findall(r"[^.!?]+(?:[.!?]|$)", text)
         chunks = []
         current = ""
 
         for sentence in sentences:
-            if current and len(current) + len(sentence) > size:
+            if len(sentence) <= size:
+                if current and len(current) + len(sentence) > size:
+                    chunks.append(current)
+                    current = ""
+                current += sentence
+                continue
+
+            if current:
                 chunks.append(current)
                 current = ""
-            current += sentence
+
+            words = re.findall(r"\S+\s*", sentence)
+            for word in words:
+                if current and len(current) + len(word) > size:
+                    chunks.append(current.rstrip())
+                    current = ""
+                current += word
+
+            if current:
+                chunks.append(current.rstrip())
+                current = ""
 
         if current:
             chunks.append(current)
+
+        print(chunks)
         return chunks
 
-    def translate(self, text, language, source="auto", chunk_size=500) -> str:
+    def translate(self, text, language, source="auto", chunk_size=400) -> str:
         identifier = f"{source}-{language}"
         translator = self.translator_cache.get(identifier)
         if translator is None:
