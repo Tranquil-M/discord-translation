@@ -1,3 +1,5 @@
+import asyncio
+import io
 import re
 
 import discord
@@ -37,26 +39,43 @@ class LiveTranslation(commands.Cog):
     async def send_as_user(
         self,
         payload: discord.Message,
-        translated_text: str | list[str],
+        translated_text: str,
         channel: discord.TextChannel,
     ):
+        try:
+            author_name = payload.author.name
+            channel_id = channel.id
+            identifier = f"{author_name}-{channel_id}"
 
-        author_name = payload.author.name
-        channel_id = channel.id
-        identifier = f"{author_name}-{channel_id}"
-
-        if identifier not in self.webhook_cache:
-            webhook = await channel.create_webhook(name=identifier)
-            self.webhook_cache[identifier] = webhook
-        else:
             webhook = self.webhook_cache.get(identifier)
+            if webhook is None:
+                webhook = await channel.create_webhook(name=identifier)
+                self.webhook_cache[identifier] = webhook
 
-        await webhook.send(
-            content=translated_text,
-            username=payload.author.display_name,
-            avatar_url=payload.author.display_avatar.url,
-            allowed_mentions=discord.AllowedMentions.none(),
-        )
+            files = []
+            try:
+                for attachment in payload.attachments or []:
+                    data = await attachment.read()
+                    files.append(
+                        discord.File(
+                            io.BytesIO(data),
+                            filename=attachment.filename,
+                            spoiler=attachment.is_spoiler(),
+                        )
+                    )
+
+                await webhook.send(
+                    content=translated_text,
+                    files=files,
+                    username=payload.author.display_name,
+                    avatar_url=payload.author.display_avatar.url,
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
+            finally:
+                for file in files:
+                    file.close()
+        except Exception as e:
+            print(e)
 
     async def cleanup_webhook_cache(self):
         for webhook in list(self.webhook_cache.values()):
@@ -84,27 +103,21 @@ class LiveTranslation(commands.Cog):
         return chunks
 
     def translate(self, text, language, source="auto", chunk_size=500) -> str:
-        try:
-            identifier = f"{source}-{language}"
-            if identifier in self.translator_cache:
-                translator = self.translator_cache.get(identifier)
-            else:
-                translator = LibreTranslator(
-                    source=source,
-                    target=language,
-                    custom_url="http://localhost:5000/",
-                )
-                self.translator_cache[identifier] = translator
+        identifier = f"{source}-{language}"
+        translator = self.translator_cache.get(identifier)
+        if translator is None:
+            translator = LibreTranslator(
+                source=source,
+                target=language,
+                custom_url="http://localhost:5000/",
+            )
+            self.translator_cache[identifier] = translator
 
-            if len(text) > chunk_size:
-                chunks = self.chunk(text, size=chunk_size)
-                translated = translator.translate_batch(chunks)
-                return "".join(translated)
+        if len(text) > chunk_size:
+            chunks = self.chunk(text, size=chunk_size)
+            return "".join(translator.translate_batch(chunks))
 
-            return translator.translate(text)
-        except Exception as e:
-            print(e)
-            return ""
+        return translator.translate(text)
 
     @app_commands.command(
         name="create_mirror",
@@ -137,6 +150,7 @@ class LiveTranslation(commands.Cog):
         self, interaction: discord.Interaction, text: str, target: str
     ):
         await interaction.response.defer(ephemeral=True)
+        translated_text = await asyncio.to_thread(self.translate, text, target)
         await interaction.followup.send(self.translate(text, target))
 
     @commands.Cog.listener()
@@ -152,13 +166,22 @@ class LiveTranslation(commands.Cog):
         if not any(message.channel.id in channel for channel in channels):
             return
 
-        for channel_id, language in channels:
-            if message.channel.id == channel_id:
-                continue
-            translated_text = self.translate(message.content, language)
-            await self.send_as_user(
-                message, translated_text, await message.guild.fetch_channel(channel_id)
-            )
+        try:
+            for channel_id, language in channels:
+                if message.channel.id == channel_id:
+                    continue
+
+                translated_text = await asyncio.to_thread(
+                    self.translate, message.content, language
+                )
+
+                await self.send_as_user(
+                    message,
+                    translated_text,
+                    await message.guild.fetch_channel(channel_id),
+                )
+        except Exception as e:
+            print(e)
 
     async def cog_unload(self):
         await self.cleanup_webhook_cache()

@@ -1,4 +1,5 @@
 import os
+import time
 
 import requests
 
@@ -10,18 +11,16 @@ class LibreTranslator(BaseTranslator):
         self,
         source: str = "en",
         target: str = "es",
-        api_key: str | None = os.getenv("LIBRE_API", None),
-        custom_url: str = "libretranslator.de/",
+        api_key: str | None = os.getenv("LIBRE_API"),
+        custom_url: str = "http://localhost:5000/",
     ):
         self.api_key = api_key
         super().__init__(
-            base_url=custom_url,
-            source=source,
-            target=target,
+            base_url=custom_url.rstrip("/") + "/", source=source, target=target
         )
 
     def translate(self, text: str) -> str:
-        if self._same_source_target or len(text) <= 0:
+        if self._same_source_target or not text:
             return text
 
         params = {
@@ -31,20 +30,26 @@ class LibreTranslator(BaseTranslator):
             "format": "text",
             "alternatives": 0,
         }
-
         if self.api_key:
             params["api_key"] = self.api_key
 
-        response = requests.post(f"{self._base_url}translate", data=params)
+        last_error = None
+        for attempt in range(3):
+            try:
+                response = requests.post(
+                    f"{self._base_url}translate",
+                    data=params,
+                    timeout=(5, 120),  # connect timeout, response timeout
+                )
+                response.raise_for_status()
+                result = response.json()
+                translated = result.get("translatedText")
+                if not isinstance(translated, str):
+                    raise ValueError(f"Unexpected LibreTranslate response: {result!r}")
+                return translated
+            except (requests.RequestException, ValueError) as exc:
+                last_error = exc
+                if attempt < 2:
+                    time.sleep(1 * (2**attempt))
 
-        if response.status_code == 403:
-            raise ValueError("You must provide and API key to use this service.")
-
-        res = response.json()
-        if not res:
-            return ""
-
-        return res["translatedText"]
-
-    def translate_batch(self, batch: list[str]) -> list[str]:
-        return [self.translate(text) for text in batch]
+        raise RuntimeError("LibreTranslate failed after 3 attempts") from last_error

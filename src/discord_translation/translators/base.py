@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-import requests
+from discord_translation.translators.constants import SUPPORTED
 
 
 class BaseTranslator(ABC):
@@ -43,12 +43,7 @@ class BaseTranslator(ABC):
         return self._source == self._target
 
     def _get_supported_languages(self) -> dict:
-        response = requests.get(f"{self._base_url}languages").json()
-        supported = {}
-        for lang in response:
-            supported[lang.get("name")] = lang.get("code")
-            supported[lang.get("code")] = lang.get("name")
-        return supported
+        return SUPPORTED
 
     def is_language_supported(self, language: str) -> bool:
         return language in [lang.name for lang in self._supported_languages]
@@ -59,5 +54,5 @@ class BaseTranslator(ABC):
             "Translate must be implemented to be a valid translator. Duh."
         )
 
-    def _translate_batch(self, batch: list[str]) -> list[str]:
+    def translate_batch(self, batch: list[str]) -> list[str]:
         return [self.translate(text) for text in batch]
