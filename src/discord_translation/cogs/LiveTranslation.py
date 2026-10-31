@@ -192,7 +192,7 @@ class LiveTranslation(commands.Cog):
         description="Manually translate text into any supported language. Returns as ephemeral.",
     )
     @app_commands.choices(target=SUPPORTED_LANGUAGES)
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=False)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def manual_translation(
         self, interaction: discord.Interaction, text: str, target: str
     ):
