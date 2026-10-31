@@ -1,4 +1,5 @@
 import os
+import re
 import time
 
 import requests
@@ -19,7 +20,7 @@ class LibreTranslator(BaseTranslator):
             base_url=custom_url.rstrip("/") + "/", source=source, target=target
         )
 
-    def translate(self, text: str) -> str:
+    def _fetch_translation(self, text: str) -> str:
         if self._same_source_target or not text:
             return text
 
@@ -53,3 +54,13 @@ class LibreTranslator(BaseTranslator):
                     time.sleep(1 * (2**attempt))
 
         raise RuntimeError("LibreTranslate failed after 3 attempts") from last_error
+
+    def translate(self, text: str) -> str:
+        return "".join(
+            (
+                part
+                if re.fullmatch(r"( ?<[^<>]*> ?)", part)
+                else self._fetch_translation(part)
+            )
+            for part in re.split(r"( ?<[^<>]*> ?)", text)
+        )
