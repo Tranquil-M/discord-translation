@@ -91,13 +91,27 @@ class LiveTranslation(commands.Cog):
                         )
                     )
 
-                await webhook.send(
-                    content=translated_text,
-                    files=files,
-                    username=payload.author.display_name,
-                    avatar_url=payload.author.display_avatar.url,
-                    allowed_mentions=discord.AllowedMentions.none(),
-                )
+                async with lock:
+                    if len(translated_text) > 2000:
+                        chunks = self.chunk(translated_text, size=2000)
+                        print(chunks)
+                        for chunk in chunks:
+                            await webhook.send(
+                                content=chunk,
+                                files=files,
+                                username=payload.author.display_name,
+                                avatar_url=payload.author.display_avatar.url,
+                                allowed_mentions=discord.AllowedMentions.none(),
+                            )
+                    else:
+                        await webhook.send(
+                            content=translated_text,
+                            files=files,
+                            username=payload.author.display_name,
+                            avatar_url=payload.author.display_avatar.url,
+                            allowed_mentions=discord.AllowedMentions.none(),
+                        )
+
             finally:
                 for file in files:
                     file.close()
@@ -146,7 +160,6 @@ class LiveTranslation(commands.Cog):
         if current:
             chunks.append(current)
 
-        print(chunks)
         return chunks
 
     def translate(self, text, language, source="auto", chunk_size=400) -> str:
