@@ -62,7 +62,7 @@ discord-translation
 | - | - |
 | ![Translate Command](assets/translate.png) | ![Output](assets/translate-output.png) |
 > [!NOTE]
-> Performs as a translation and returns as an ephemeral, meaning only you can see the translated message.
+> Performs a translation and returns as an ephemeral, meaning only you can see the translated message.
 
 <a name="res"></a>
 
